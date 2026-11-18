@@ -1,4 +1,7 @@
 """Recuperación semántica: embeddings con sentence-transformers + ChromaDB."""
+import shutil
+from pathlib import Path
+
 from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "all-MiniLM-L6-v2"
@@ -14,6 +17,9 @@ def load_model():
 def build_collection(chroma_path, doc_ids, texts, model, batch_size=64, add_chunk=2000):
     """Calcula los embeddings de los documentos y los guarda en ChromaDB (se hace UNA vez)."""
     import chromadb
+    chroma_path = Path(chroma_path).resolve()
+    shutil.rmtree(chroma_path, ignore_errors=True)
+    chroma_path.parent.mkdir(parents=True, exist_ok=True)
     client = chromadb.PersistentClient(path=str(chroma_path))
     try:
         client.delete_collection(COLLECTION)
@@ -31,7 +37,7 @@ def build_collection(chroma_path, doc_ids, texts, model, batch_size=64, add_chun
 
 def get_collection(chroma_path):
     import chromadb
-    return chromadb.PersistentClient(path=str(chroma_path)).get_collection(COLLECTION)
+    return chromadb.PersistentClient(path=str(Path(chroma_path).resolve())).get_collection(COLLECTION)
 
 
 def embedding_search(col, model, query, k=10):

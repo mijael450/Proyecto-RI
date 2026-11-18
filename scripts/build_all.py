@@ -37,7 +37,9 @@ models = {
     "tfidf": lambda text, k: tfidf_search(index, text, k),
     "bm25": lambda text, k: bm25_search(index, text, k),
 }
-metrics = {"k": K, "models": {}}
+metrics_path = ART / "metrics.json"
+metrics = json.load(open(metrics_path)) if metrics_path.exists() else {"k": K, "models": {}}
+metrics["k"] = K
 for name, fn in models.items():
     t0 = time.time()
     res = evaluate(fn, queries, qrels, k=K)
@@ -52,5 +54,5 @@ for name, fn in models.items():
     print(f"{name:8s} MAP={m['MAP']:.4f}  P@{K}={m[f'mean_precision@{K}']:.4f}  "
           f"R@{K}={m[f'mean_recall@{K}']:.4f}  ({time.time() - t0:.1f}s)")
 
-json.dump(metrics, open(ART / "metrics.json", "w"), indent=1)
+json.dump(metrics, open(metrics_path, "w"), indent=1)
 print("Guardado: artifacts/index.pkl y artifacts/metrics.json")
